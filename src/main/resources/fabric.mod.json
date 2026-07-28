@@ -2,34 +2,26 @@
   "schemaVersion": 1,
   "id": "bedwarshud",
   "version": "${version}",
-  "name": "bedwarsHud",
-  "description": "",
-  "authors": [],
-  "contact": {},
-  "license": "All-Rights-Reserved",
+  "name": "Bed Wars HUD",
+  "description": "A lightweight client-side bed status HUD for Hypixel Bed Wars.",
+  "authors": [
+    "Noambh0"
+  ],
+  "contact": {
+    "sources": "https://github.com/Noambh0/bedwarsHud"
+  },
+  "license": "MIT",
   "icon": "assets/bedwarshud/icon.png",
   "environment": "client",
   "entrypoints": {
-    "fabric-datagen": [
-      "com.bedwars.client.hudDataGenerator"
-    ],
     "client": [
-      "com.bedwars.client.hudClient"
-    ],
-    "main": [
-      "com.bedwars.hud"
+      "com.bedwarshud.BedWarsHudClient"
     ]
   },
-  "mixins": [
-    "bedwarshud.mixins.json",
-    {
-      "config": "bedwarshud.client.mixins.json",
-      "environment": "client"
-    }
-  ],
   "depends": {
-    "fabricloader": ">=${loader_version}",
-    "fabric-api": "*",
-    "minecraft": "${minecraft_version}"
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": ">=0.141.6"
   }
 }
