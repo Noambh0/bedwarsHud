@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "id": "bedwarshud",
+  "version": "${version}",
+  "name": "bedwarsHud",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "icon": "assets/bedwarshud/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "com.bedwars.client.hudDataGenerator"
+    ],
+    "client": [
+      "com.bedwars.client.hudClient"
+    ],
+    "main": [
+      "com.bedwars.hud"
+    ]
+  },
+  "mixins": [
+    "bedwarshud.mixins.json",
+    {
+      "config": "bedwarshud.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
