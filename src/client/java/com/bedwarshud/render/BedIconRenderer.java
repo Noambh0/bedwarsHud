@@ -12,6 +12,9 @@ public final class BedIconRenderer {
             Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/red_slash.png");
     private static final Identifier ELIMINATED_TEXTURE =
             Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/red_x.png");
+    private static final Identifier TEAM_ARROW_TEXTURE =
+            Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/team_arrow.png");
+    private static final int TEXTURE_SIZE = 64;
 
     private BedIconRenderer() {
     }
@@ -27,8 +30,8 @@ public final class BedIconRenderer {
                 0.0F,
                 size,
                 size,
-                16,
-                16,
+                TEXTURE_SIZE,
+                TEXTURE_SIZE,
                 color
         );
 
@@ -50,9 +53,24 @@ public final class BedIconRenderer {
                     0.0F,
                     overlaySize,
                     overlaySize,
-                    16,
-                    16
+                    TEXTURE_SIZE,
+                    TEXTURE_SIZE
             );
         }
+    }
+
+    public static void drawTeamArrow(GuiGraphics graphics, int centerX, int bottomY, int size) {
+        graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
+                TEAM_ARROW_TEXTURE,
+                centerX - size / 2,
+                bottomY - size,
+                0.0F,
+                0.0F,
+                size,
+                size,
+                TEXTURE_SIZE,
+                TEXTURE_SIZE
+        );
     }
 }
