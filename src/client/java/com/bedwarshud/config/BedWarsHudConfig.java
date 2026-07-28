@@ -2,7 +2,6 @@ package com.bedwarshud.config;
 
 public final class BedWarsHudConfig {
     public boolean hudEnabled = true;
-    public boolean nametagIconsEnabled = true;
     public float hudScale = 1.0F;
     public int hudXOffset = 0;
     public int hudYOffset = 8;
@@ -26,4 +25,3 @@ public final class BedWarsHudConfig {
         return Math.max(minimum, Math.min(maximum, value));
     }
 }
-

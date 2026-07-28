@@ -19,15 +19,21 @@ import java.util.regex.Pattern;
 
 public final class BedStatusTracker {
     private static final Pattern TEAM_STATUS = Pattern.compile(
-            "(?i)(?:^|\\s)(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)\\s*[:\\-]?\\s*(.+)$");
+            "(?i)(?:^|\\s)(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)\\s*[:\\-]?\\s*(.*)$");
     private static final Pattern BED_WARS = Pattern.compile("(?i)bed\\s*wars");
     private static final Pattern BED_DESTROYED_MESSAGE = Pattern.compile(
             "(?i)\\bbed\\s+destruction\\b.*?\\b"
                     + "(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)"
                     + "(?:['’]s)?\\s+bed\\b");
+    private static final Pattern TEAM_ELIMINATED_MESSAGE = Pattern.compile(
+            "(?i)\\bteam\\s+eliminated\\b.*?\\b"
+                    + "(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)"
+                    + "\\s+team\\b");
+    private static final Pattern PLAYER_COUNT = Pattern.compile("\\b(\\d+)\\b");
 
     private final EnumMap<BedWarsTeam, BedState> states = new EnumMap<>(BedWarsTeam.class);
     private boolean inBedWars;
+    private boolean supportedMode;
     private int ticksUntilRefresh;
 
     public BedStatusTracker() {
@@ -71,6 +77,7 @@ public final class BedStatusTracker {
                 resetStates();
             }
             inBedWars = false;
+            supportedMode = false;
             return;
         }
 
@@ -79,17 +86,29 @@ public final class BedStatusTracker {
         }
         inBedWars = true;
 
-        // A destroyed bed cannot become alive again during the same match. This also
+        // Solo and Doubles are the only regular modes with all eight Bed Wars teams.
+        // Lobbies and 2/4-team modes never expose eight team-status rows.
+        if (observed.size() == BedWarsTeam.values().length) {
+            supportedMode = true;
+        } else {
+            supportedMode = false;
+        }
+
+        // A broken bed cannot become alive again during the same match. This also
         // prevents a one-tick-old scoreboard line from undoing a chat-message update.
         observed.forEach((team, observedState) -> {
-            if (observedState == BedState.DESTROYED || states.get(team) != BedState.DESTROYED) {
+            BedState currentState = states.get(team);
+            if (currentState != BedState.ELIMINATED
+                    && (observedState == BedState.ELIMINATED
+                    || currentState != BedState.BED_DESTROYED
+                    || observedState == BedState.BED_DESTROYED)) {
                 states.put(team, observedState);
             }
         });
     }
 
     public boolean isInBedWars() {
-        return inBedWars;
+        return inBedWars && supportedMode;
     }
 
     /**
@@ -98,11 +117,21 @@ public final class BedStatusTracker {
      */
     public void handleGameMessage(Component message) {
         String text = plain(message);
-        Matcher matcher = BED_DESTROYED_MESSAGE.matcher(text);
-        if (matcher.find()) {
-            BedWarsTeam team = teamFromName(matcher.group(1));
+        Matcher eliminatedMatcher = TEAM_ELIMINATED_MESSAGE.matcher(text);
+        if (eliminatedMatcher.find()) {
+            BedWarsTeam team = teamFromName(eliminatedMatcher.group(1));
             if (team != null) {
-                states.put(team, BedState.DESTROYED);
+                states.put(team, BedState.ELIMINATED);
+                BedWarsHudClient.LOGGER.info("Detected {} team elimination from Hypixel message", team);
+            }
+            return;
+        }
+
+        Matcher destroyedMatcher = BED_DESTROYED_MESSAGE.matcher(text);
+        if (destroyedMatcher.find()) {
+            BedWarsTeam team = teamFromName(destroyedMatcher.group(1));
+            if (team != null) {
+                states.put(team, BedState.BED_DESTROYED);
                 inBedWars = true;
                 BedWarsHudClient.LOGGER.info("Detected {} bed destruction from Hypixel message", team);
             }
@@ -134,10 +163,15 @@ public final class BedStatusTracker {
             return;
         }
 
-        if (status.contains("✕") || status.contains("×") || status.contains("dead")
-                || status.contains("destroyed")
-                || status.matches(".*\\b[0-9]+\\b.*")) {
-            target.put(team, BedState.DESTROYED);
+        Matcher playerCount = PLAYER_COUNT.matcher(status);
+        if (status.isBlank() || status.contains("✕") || status.contains("×") || status.contains("dead")
+                || status.contains("eliminated")) {
+            target.put(team, BedState.ELIMINATED);
+        } else if (playerCount.find()) {
+            int remainingPlayers = Integer.parseInt(playerCount.group(1));
+            target.put(team, remainingPlayers > 0 ? BedState.BED_DESTROYED : BedState.ELIMINATED);
+        } else if (status.contains("destroyed")) {
+            target.put(team, BedState.BED_DESTROYED);
         } else if (status.contains("✓") || status.contains("alive")) {
             target.put(team, BedState.ALIVE);
         }
@@ -163,6 +197,7 @@ public final class BedStatusTracker {
 
     private void reset() {
         inBedWars = false;
+        supportedMode = false;
         ticksUntilRefresh = 0;
         resetStates();
     }

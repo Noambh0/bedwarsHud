@@ -42,9 +42,15 @@ public final class HudRenderer {
         for (int index = 0; index < teams.length; index++) {
             BedWarsTeam team = teams[index];
             int x = startX + index * (iconSize + gap);
-            boolean destroyed = tracker.state(team) == BedState.DESTROYED;
-            BedIconRenderer.draw(graphics, x, y, iconSize, team.argb(), destroyed, settings.redXSize);
+            BedIconRenderer.draw(
+                    graphics,
+                    x,
+                    y,
+                    iconSize,
+                    team.argb(),
+                    tracker.state(team),
+                    settings.redXSize
+            );
         }
     }
 }
-
