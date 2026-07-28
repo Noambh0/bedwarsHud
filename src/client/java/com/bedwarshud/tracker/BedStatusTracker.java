@@ -1,5 +1,6 @@
 package com.bedwarshud.tracker;
 
+import com.bedwarshud.BedWarsHudClient;
 import com.bedwarshud.model.BedState;
 import com.bedwarshud.model.BedWarsTeam;
 import net.minecraft.client.Minecraft;
@@ -21,7 +22,9 @@ public final class BedStatusTracker {
             "(?i)(?:^|\\s)(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)\\s*[:\\-]?\\s*(.+)$");
     private static final Pattern BED_WARS = Pattern.compile("(?i)bed\\s*wars");
     private static final Pattern BED_DESTROYED_MESSAGE = Pattern.compile(
-            "(?i)\\b(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)\\s+bed\\b.*\\b(?:destroyed|broken)\\b");
+            "(?i)\\bbed\\s+destruction\\b.*?\\b"
+                    + "(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)"
+                    + "(?:['’]s)?\\s+bed\\b");
 
     private final EnumMap<BedWarsTeam, BedState> states = new EnumMap<>(BedWarsTeam.class);
     private boolean inBedWars;
@@ -51,7 +54,7 @@ public final class BedStatusTracker {
 
         String title = plain(sidebar.getDisplayName());
         StringBuilder visibleText = new StringBuilder(title);
-        EnumMap<BedWarsTeam, BedState> next = new EnumMap<>(states);
+        EnumMap<BedWarsTeam, BedState> observed = new EnumMap<>(BedWarsTeam.class);
 
         for (PlayerScoreEntry entry : scoreboard.listPlayerScores(sidebar)) {
             PlayerTeam team = scoreboard.getPlayersTeam(entry.owner());
@@ -59,11 +62,30 @@ public final class BedStatusTracker {
             Component decorated = PlayerTeam.formatNameForTeam(team, line);
             String text = plain(decorated);
             visibleText.append('\n').append(text);
-            parseTeamLine(text, next);
+            parseTeamLine(text, observed);
         }
 
-        inBedWars = BED_WARS.matcher(visibleText).find();
-        states.putAll(next);
+        boolean detectedBedWars = BED_WARS.matcher(visibleText).find();
+        if (!detectedBedWars) {
+            if (inBedWars) {
+                resetStates();
+            }
+            inBedWars = false;
+            return;
+        }
+
+        if (!inBedWars) {
+            resetStates();
+        }
+        inBedWars = true;
+
+        // A destroyed bed cannot become alive again during the same match. This also
+        // prevents a one-tick-old scoreboard line from undoing a chat-message update.
+        observed.forEach((team, observedState) -> {
+            if (observedState == BedState.DESTROYED || states.get(team) != BedState.DESTROYED) {
+                states.put(team, observedState);
+            }
+        });
     }
 
     public boolean isInBedWars() {
@@ -75,13 +97,17 @@ public final class BedStatusTracker {
      * message is more reliable than waiting for every sidebar variant to update.
      */
     public void handleGameMessage(Component message) {
-        Matcher matcher = BED_DESTROYED_MESSAGE.matcher(plain(message));
+        String text = plain(message);
+        Matcher matcher = BED_DESTROYED_MESSAGE.matcher(text);
         if (matcher.find()) {
             BedWarsTeam team = teamFromName(matcher.group(1));
             if (team != null) {
                 states.put(team, BedState.DESTROYED);
                 inBedWars = true;
+                BedWarsHudClient.LOGGER.info("Detected {} bed destruction from Hypixel message", team);
             }
+        } else if (text.toLowerCase(Locale.ROOT).contains("bed destruction")) {
+            BedWarsHudClient.LOGGER.warn("Could not identify team in Bed Wars message: {}", text);
         }
     }
 
@@ -138,6 +164,10 @@ public final class BedStatusTracker {
     private void reset() {
         inBedWars = false;
         ticksUntilRefresh = 0;
+        resetStates();
+    }
+
+    private void resetStates() {
         for (BedWarsTeam team : BedWarsTeam.values()) {
             states.put(team, BedState.UNKNOWN);
         }
