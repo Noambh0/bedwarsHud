@@ -88,9 +88,9 @@ public final class BedStatusTracker {
 
         // Solo and Doubles are the only regular modes with all eight Bed Wars teams.
         // Lobbies and 2/4-team modes never expose eight team-status rows.
-        if (observed.size() == BedWarsTeam.values().length) {
+        if (!supportedMode && observed.size() == BedWarsTeam.values().length) {
             supportedMode = true;
-        } else {
+        } else if (supportedMode && observed.isEmpty()) {
             supportedMode = false;
         }
 
