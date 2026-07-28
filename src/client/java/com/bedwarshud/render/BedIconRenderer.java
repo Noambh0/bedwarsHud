@@ -7,8 +7,7 @@ import net.minecraft.resources.Identifier;
 public final class BedIconRenderer {
     private static final Identifier BED_TEXTURE =
             Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/bed.png");
-    private static final Identifier RED_X_TEXTURE =
-            Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/red_x.png");
+    private static final int DESTROYED_LINE_COLOR = 0xFFFF2020;
 
     private BedIconRenderer() {
     }
@@ -30,20 +29,21 @@ public final class BedIconRenderer {
         );
 
         if (destroyed) {
-            int overlaySize = Math.max(1, Math.round(size * redXScale));
-            int overlayX = x + (size - overlaySize) / 2;
-            int overlayY = y + (size - overlaySize) / 2;
-            graphics.blit(
-                    RenderPipelines.GUI_TEXTURED,
-                    RED_X_TEXTURE,
-                    overlayX,
-                    overlayY,
-                    0.0F,
-                    0.0F,
-                    overlaySize,
-                    overlaySize,
-                    16,
-                    16
+            drawDestroyedLine(graphics, x, y, size, redXScale);
+        }
+    }
+
+    private static void drawDestroyedLine(GuiGraphics graphics, int x, int y, int size, float scale) {
+        int thickness = Math.max(1, Math.round(size / 14.0F * scale));
+        for (int offset = 0; offset < size; offset++) {
+            int lineX = x + offset;
+            int lineY = y + size - 1 - offset;
+            graphics.fill(
+                    lineX,
+                    Math.max(y, lineY - thickness + 1),
+                    Math.min(x + size, lineX + thickness),
+                    lineY + 1,
+                    DESTROYED_LINE_COLOR
             );
         }
     }

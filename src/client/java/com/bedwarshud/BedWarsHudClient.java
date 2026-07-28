@@ -5,6 +5,7 @@ import com.bedwarshud.render.HudRenderer;
 import com.bedwarshud.tracker.BedStatusTracker;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,7 @@ public final class BedWarsHudClient implements ClientModInitializer {
         HudRenderer renderer = new HudRenderer(client, TRACKER, () -> configManager.get());
 
         ClientTickEvents.END_CLIENT_TICK.register(TRACKER::tick);
+        ClientReceiveMessageEvents.GAME.register((message, overlay) -> TRACKER.handleGameMessage(message));
         HudElementRegistry.attachElementBefore(
                 VanillaHudElements.CHAT,
                 Identifier.fromNamespaceAndPath(MOD_ID, "bed_status"),

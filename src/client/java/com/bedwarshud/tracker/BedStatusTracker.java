@@ -20,6 +20,8 @@ public final class BedStatusTracker {
     private static final Pattern TEAM_STATUS = Pattern.compile(
             "(?i)(?:^|\\s)(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)\\s*[:\\-]?\\s*(.+)$");
     private static final Pattern BED_WARS = Pattern.compile("(?i)bed\\s*wars");
+    private static final Pattern BED_DESTROYED_MESSAGE = Pattern.compile(
+            "(?i)\\b(red|blue|green|yellow|aqua|cyan|white|pink|gray|grey)\\s+bed\\b.*\\b(?:destroyed|broken)\\b");
 
     private final EnumMap<BedWarsTeam, BedState> states = new EnumMap<>(BedWarsTeam.class);
     private boolean inBedWars;
@@ -68,6 +70,21 @@ public final class BedStatusTracker {
         return inBedWars;
     }
 
+    /**
+     * Hypixel announces bed destructions as game messages. Reading that client-visible
+     * message is more reliable than waiting for every sidebar variant to update.
+     */
+    public void handleGameMessage(Component message) {
+        Matcher matcher = BED_DESTROYED_MESSAGE.matcher(plain(message));
+        if (matcher.find()) {
+            BedWarsTeam team = teamFromName(matcher.group(1));
+            if (team != null) {
+                states.put(team, BedState.DESTROYED);
+                inBedWars = true;
+            }
+        }
+    }
+
     public BedState state(BedWarsTeam team) {
         return states.getOrDefault(team, BedState.UNKNOWN);
     }
@@ -85,17 +102,7 @@ public final class BedStatusTracker {
 
         String teamName = matcher.group(1).toLowerCase(Locale.ROOT);
         String status = matcher.group(2).toLowerCase(Locale.ROOT);
-        BedWarsTeam team = switch (teamName) {
-            case "red" -> BedWarsTeam.RED;
-            case "blue" -> BedWarsTeam.BLUE;
-            case "green" -> BedWarsTeam.GREEN;
-            case "yellow" -> BedWarsTeam.YELLOW;
-            case "aqua", "cyan" -> BedWarsTeam.AQUA;
-            case "white" -> BedWarsTeam.WHITE;
-            case "pink" -> BedWarsTeam.PINK;
-            case "gray", "grey" -> BedWarsTeam.GRAY;
-            default -> null;
-        };
+        BedWarsTeam team = teamFromName(teamName);
 
         if (team == null) {
             return;
@@ -108,6 +115,20 @@ public final class BedStatusTracker {
         } else if (status.contains("✓") || status.contains("alive")) {
             target.put(team, BedState.ALIVE);
         }
+    }
+
+    private static BedWarsTeam teamFromName(String teamName) {
+        return switch (teamName.toLowerCase(Locale.ROOT)) {
+            case "red" -> BedWarsTeam.RED;
+            case "blue" -> BedWarsTeam.BLUE;
+            case "green" -> BedWarsTeam.GREEN;
+            case "yellow" -> BedWarsTeam.YELLOW;
+            case "aqua", "cyan" -> BedWarsTeam.AQUA;
+            case "white" -> BedWarsTeam.WHITE;
+            case "pink" -> BedWarsTeam.PINK;
+            case "gray", "grey" -> BedWarsTeam.GRAY;
+            default -> null;
+        };
     }
 
     private static String plain(Component component) {
