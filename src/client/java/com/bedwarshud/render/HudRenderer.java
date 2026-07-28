@@ -37,18 +37,11 @@ public final class HudRenderer {
         int totalWidth = count * iconSize + (count - 1) * gap;
         int startX = (graphics.guiWidth() - totalWidth) / 2 + settings.hudXOffset;
         int y = settings.hudYOffset;
-        BedWarsTeam ownTeam = client.player == null
-                ? null
-                : BedWarsTeam.fromPlayerTeam(client.player.getTeam()).orElse(null);
 
         BedWarsTeam[] teams = BedWarsTeam.values();
         for (int index = 0; index < teams.length; index++) {
             BedWarsTeam team = teams[index];
             int x = startX + index * (iconSize + gap);
-            if (team == ownTeam) {
-                int arrowSize = Math.max(5, Math.round(iconSize * 0.45F));
-                BedIconRenderer.drawTeamArrow(graphics, x + iconSize / 2, y, arrowSize);
-            }
             BedIconRenderer.draw(
                     graphics,
                     x,
