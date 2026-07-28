@@ -2,13 +2,13 @@ package com.bedwarshud.render;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public final class BedIconRenderer {
-    private static final ResourceLocation BED_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("bedwarshud", "textures/gui/bed.png");
-    private static final ResourceLocation RED_X_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath("bedwarshud", "textures/gui/red_x.png");
+    private static final Identifier BED_TEXTURE =
+            Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/bed.png");
+    private static final Identifier RED_X_TEXTURE =
+            Identifier.fromNamespaceAndPath("bedwarshud", "textures/gui/red_x.png");
 
     private BedIconRenderer() {
     }

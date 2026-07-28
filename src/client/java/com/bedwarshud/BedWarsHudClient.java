@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public final class BedWarsHudClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(TRACKER::tick);
         HudElementRegistry.attachElementBefore(
                 VanillaHudElements.CHAT,
-                ResourceLocation.fromNamespaceAndPath(MOD_ID, "bed_status"),
+                Identifier.fromNamespaceAndPath(MOD_ID, "bed_status"),
                 renderer::render
         );
 
