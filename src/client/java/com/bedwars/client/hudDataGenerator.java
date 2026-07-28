@@ -10,3 +10,4 @@ public class hudDataGenerator implements DataGeneratorEntrypoint {
         FabricDataGenerator.Pack pack = fabricDataGenerator.createPack();
     }
 }
+ 
