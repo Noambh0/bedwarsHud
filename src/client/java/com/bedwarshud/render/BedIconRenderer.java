@@ -50,8 +50,8 @@ public final class BedIconRenderer {
                     0.0F,
                     overlaySize,
                     overlaySize,
-                    64,
-                    64
+                    16,
+                    16
             );
         }
     }
